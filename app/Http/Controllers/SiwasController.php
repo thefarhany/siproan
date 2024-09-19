@@ -26,7 +26,7 @@ class SiwasController extends Controller
 
     public function add_pekerjaan(Request $request)
     {
-        $data['kotama'] = $request->kotama;
+        $data['pagu'] = $request->pagu;
         $data['pembayaran'] = $request->pembayaran;
         $data['nama_pekerjaan'] = $request->nama_pekerjaan;
         $data['no_tgl_spmk'] = $request->no_tgl_spmk;

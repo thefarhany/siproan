@@ -27,13 +27,7 @@
           <div class="modal-body">
             <div class="form-row">
               <div class="form-group col-6">
-                <label for="kotama">Kotama/Kesatuan</label>
-                <select class="form-control" id="kotama" name="kotama">
-                  <option value="Zidam IV">Zidam IV</option>
-                </select>
-              </div>
-              <div class="form-group col-6">
-                <label for="pembayaran">Pembayaran</label>
+                <label for="pembayaran">Jenis Pekerjaan</label>
                 <select class="form-control" id="pembayaran" name="pembayaran">
                   <option value="Reguler">Reguler</option>
                   <option value="Swakelola">Swakelola</option>
@@ -41,6 +35,10 @@
                   <option value="Hibah">Hibah</option>
                   <option value="BLU">BLU</option>
                 </select>
+              </div>
+              <div class="form-group col-6">
+                <label for="pagu">Pagu</label>
+                <input type="text" class="form-control" id="pagu" name="pagu" placeholder="Pagu" onkeyup="formatRupiah(this)">
               </div>
             </div>
             <div class="form-group">
@@ -53,7 +51,7 @@
             </div>
             <div class="form-group">
               <label for="nilai_kontrak">Nilai Kontrak</label>
-              <input type="text" class="form-control" id="nilai_kontrak" name="nilai_kontrak" placeholder="Nilai Kontrak">
+              <input type="text" class="form-control" id="nilai_kontrak" name="nilai_kontrak" placeholder="Nilai Kontrak" onkeyup="formatRupiah(this)">
             </div>
             <div class="form-group">
               <label for="penyedia_jasa">Penyedia Jasa</label>
@@ -100,7 +98,7 @@
           <td>{{ $loop->iteration }}</td>
           <td>{{ $d->nama_pekerjaan }}</td>
           <td>{{ $d->no_tgl_spmk }}</td>
-          <td>{{ $d->nilai_kontrak }}</td>
+          <td>Rp {{ $d->nilai_kontrak }}</td>
           <td><span class="badge bg-warning">{{ $d->lapju_ril }} %</span></td>
           <td class="align-middle">
             <a href="{{ route('find-pekerjaan', ['id' => $d->id]) }}" class="mr-2" data-toggle="modal" data-target="#edit-pekerjaan{{ $d->id }}"><i class="far fa-edit"></i></a>
@@ -195,6 +193,26 @@
       </tbody>
     </table>
   </div>
-  <!-- /.card-body -->
 </div>
+
+<script>
+  function formatRupiah(element, prefix) {
+    let number_string = element.value.replace(/[^,\d]/g, '').toString(),
+      split = number_string.split(','),
+      remainder = split[0].length % 3,
+      rupiah = split[0].substr(0, remainder),
+      thousands = split[0].substr(remainder).match(/\d{3}/gi);
+
+    // Tambahkan titik jika ada ribuan
+    if (thousands) {
+      separator = remainder ? '.' : '';
+      rupiah += separator + thousands.join('.');
+    }
+
+    rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+    element.value = prefix == undefined ? rupiah : (rupiah ? 'Rp ' + rupiah : '');
+  }
+</script>
+
+
 @endsection

@@ -9,9 +9,7 @@
 
 <div class="card mt-3">
   <div class="card-header">
-    <!-- <h3 class="card-title">Cetak Data</h3> -->
-    <a href="{{ route('print-data', ['pembayaran' => request('pembayaran'), 'start_date' => request('start_date'), 'end_date' => request('end_date')]) }}" style="margin-top: 31px;" class="btn btn-warning float-right">Export</a>
-    <form class="d-flex float-right mr-3" action="{{ route('filter-data') }}" method="GET">
+    <form class="d-flex flex-wrap mr-3" action="{{ route('filter-data') }}" method="GET">
       <div class="form-group mx-3">
         <label for="pembayaran">Jenis Pembayaran</label>
         <select class="custom-select custom-select" id="pembayaran" name="pembayaran">
@@ -32,6 +30,7 @@
         <input type="date" id="end_date" name="end_date" class="form-control">
       </div>
       <button style="height: 38px; margin-top: 31px;" type="submit" class="btn btn-primary">Filter</button>
+      <a href="{{ route('print-data', ['pembayaran' => request('pembayaran'), 'start_date' => request('start_date'), 'end_date' => request('end_date')]) }}" style="height: 38px; margin-top: 31px;" class="ml-3 btn btn-warning">Export</a>
     </form>
   </div>
 
@@ -41,6 +40,7 @@
         <tr class="text-center">
           <th class="align-middle">No</th>
           <th class="align-middle">Nama Pekerjaan</th>
+          <th class="align-middle">Pagu</th>
           <th class="align-middle">Nomor/Tanggal/SPMK</th>
           <th class="align-middle">Nilai Kontrak</th>
           <th class="align-middle">Penyedia Jasa</th>
@@ -58,8 +58,9 @@
         <tr class="text-center">
           <td class="align-middle">{{ $loop->iteration }}</td>
           <td class="align-middle">{{ $d->nama_pekerjaan }}</td>
+          <td class="align-middle">Rp {{ $d->pagu }}</td>
           <td class="align-middle">{{ $d->no_tgl_spmk }}</td>
-          <td class="align-middle">{{ $d->nilai_kontrak }}</td>
+          <td class="align-middle">Rp {{ $d->nilai_kontrak }}</td>
           <td class="align-middle">{{ $d->penyedia_jasa }}</td>
           <td class="align-middle">{{ date('d-m-Y', strtotime($d->tanggal_mulai)) }}</td>
           <td class="align-middle">{{ date('d-m-Y', strtotime($d->tanggal_selesai)) }}</td>

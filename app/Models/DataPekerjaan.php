@@ -10,9 +10,9 @@ class DataPekerjaan extends Model
     use HasFactory;
 
     protected $fillable = [
-        'kotama',
         'pembayaran',
         'nama_pekerjaan',
+        'pagu',
         'no_tgl_spmk',
         'nilai_kontrak',
         'penyedia_jasa',

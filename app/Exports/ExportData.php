@@ -7,89 +7,111 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\RegistersEventListeners;
+use Maatwebsite\Excel\Events\AfterSheet;
 
-class ExportData implements FromCollection, WithHeadings, ShouldAutoSize, WithColumnWidths
+class ExportData implements FromCollection, WithHeadings, ShouldAutoSize, WithColumnWidths, WithEvents
 {
-    /**
-     * @return \Illuminate\Support\Collection
-     */
-    protected $startDate;
-    protected $endDate;
-    protected $pembayaran;
-
-    public function __construct($startDate = null, $endDate = null, $pembayaran = null)
-    {
-        $this->startDate = $startDate;
-        $this->endDate = $endDate;
-        $this->pembayaran = $pembayaran;
-    }
+    use RegistersEventListeners;
 
     public function headings(): array
     {
         return [
-            'Nomor/Tanggal/SPMK',
-            'Kotama',
-            'Nama Pekerjaan',
-            'Nilai Kontrak',
-            'Penyedia Jasa',
-            'Tanggal Mulai',
-            'Tanggal Selesai',
-            'Jumlah Hari',
-            'Lapju Rencana',
-            'Lapju Ril',
-            'Lapju Deviasi',
-            'Daya Serap',
+            // Baris pertama header (merge)
+            ['NO', 'PROGRAM / KEGIATAN / URAIAN', 'PAGU', 'NO/TGL. SP NILAI KONTRAK', 'PENYEDIA JASA', 'PELAKSANAAN', '', '', 'DAYA SERAP', 'JUJIK (%)', '', '', 'JUMIN', 'KETERANGAN'],
+            // Baris kedua header (detail subkolom)
+            ['', '', '', '', '', 'MULAI', 'SELESAI', 'JML HARI', '', 'RENC', 'RIIL', 'DEVIASI', '', ''],
         ];
     }
 
     public function columnWidths(): array
     {
         return [
-            'A' => 20,
-            'B' => 20,
-            'C' => 50,
-            'D' => 20,
-            'E' => 20,
-            'F' => 20,
-            'G' => 20,
-            'H' => 20,
-            'I' => 20,
-            'J' => 20,
-            'K' => 20,
-            'L' => 20,
-            'M' => 20,
-            'N' => 20,
+            'A' => 5,   // No
+            'B' => 30,  // Program / Kegiatan / Uraian
+            'C' => 20,  // Pagu Rp
+            'D' => 20,  // Kosong untuk merge
+            'E' => 30,  // No / Tgl SP Nilai Kontrak
+            'F' => 30,  // Penyedia Jasa
+            'G' => 20,  // Tanggal Mulai
+            'H' => 20,  // Tanggal Selesai
+            'I' => 15,  // Jumlah Hari
+            'J' => 10,  // Lapju Rencana
+            'K' => 10,  // Lapju Ril
+            'L' => 10,  // Lapju Deviasi
+            'M' => 10,  // Jumin
         ];
     }
 
     public function collection()
     {
-        $query = DataPekerjaan::select(
-            'no_tgl_spmk',
-            'kotama',
+        // Ambil data dari database
+        $data = DataPekerjaan::select(
             'nama_pekerjaan',
-            'nilai_kontrak',
+            'pagu',
+            'no_tgl_spmk',
             'penyedia_jasa',
             'tanggal_mulai',
             'tanggal_selesai',
-            'jumlah_hari', // Tambahkan logika untuk menghitung jumlah hari
+            'jumlah_hari',
             'lapju_rencana',
             'lapju_ril',
             'lapju_deviasi',
-            'daya_serap'
-        );
+            'daya_serap',
+            'ket'
+        )->get();
 
-        // Filter berdasarkan jenis pembayaran jika ada
-        if ($this->pembayaran) {
-            $query->where('pembayaran', $this->pembayaran);
-        }
+        // Tambahkan nomor urut menggunakan map
+        return $data->map(function ($item, $index) {
+            return [
+                'no' => $index + 1, // Nomor urut
+                'nama_pekerjaan' => $item->nama_pekerjaan,
+                'pagu' => $item->pagu,
+                'no_tgl_spmk' => $item->no_tgl_spmk,
+                'penyedia_jasa' => $item->penyedia_jasa,
+                'tanggal_mulai' => $item->tanggal_mulai,
+                'tanggal_selesai' => $item->tanggal_selesai,
+                'jumlah_hari' => $item->jumlah_hari,
+                'lapju_rencana' => $item->lapju_rencana,
+                'lapju_ril' => $item->lapju_ril,
+                'lapju_deviasi' => $item->lapju_deviasi,
+                'daya_serap' => $item->daya_serap,
+                'ket' => $item->ket,
+            ];
+        });
+    }
 
-        // Filter berdasarkan tanggal jika ada
-        if ($this->startDate && $this->endDate) {
-            $query->whereBetween('updated_at', [$this->startDate, $this->endDate]);
-        }
+    public static function afterSheet(AfterSheet $event)
+    {
+        // Merge cells untuk header
+        $event->sheet->mergeCells('A1:A2'); // NO
+        $event->sheet->mergeCells('B1:B2'); // PROGRAM / KEGIATAN / URAIAN
+        $event->sheet->mergeCells('C1:C2'); // PAGU
+        $event->sheet->mergeCells('D1:D2'); // NO/TGL. SP NILAI KONTRAK
+        $event->sheet->mergeCells('E1:E2'); // PENYEDIA JASA
+        $event->sheet->mergeCells('F1:H1'); // PELAKSANAAN (kolom mulai, selesai, jml hari)
+        $event->sheet->mergeCells('I1:I2'); // DAYA SERAP
+        $event->sheet->mergeCells('J1:L1'); // JUJIK (%)
+        $event->sheet->mergeCells('M1:M2'); // JUMIN
+        $event->sheet->mergeCells('N1:N2'); // KETERANGAN
 
-        // Mengembalikan data hasil filter
-        return $query->get();
+        // Style untuk header
+        $event->sheet->getStyle('A1:N2')->applyFromArray([
+            'font' => [
+                'bold' => true,
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'outline' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THICK,
+                ],
+            ],
+        ]);
+
+        $event->sheet->getStyle('D1:D1000')->getAlignment()->setWrapText(true);
     }
 }

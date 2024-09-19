@@ -98,7 +98,7 @@
               <a href="#" class="nav-link">
                 <i class="nav-icon fas fa-book"></i>
                 <p>
-                  Jenis Pembayaran
+                  Jenis Pekerjaan
                   <i class="fas fa-angle-left right"></i>
                 </p>
               </a>
